@@ -1,0 +1,97 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`error serializer serializes an error with a null id 1`] = `
+Object {
+  "error": Object {
+    "code": 0,
+    "data": undefined,
+    "message": "",
+  },
+  "id": null,
+  "jsonrpc": "2.0",
+}
+`;
+
+exports[`error serializer serializes an error with a numeric id 1`] = `
+Object {
+  "error": Object {
+    "code": 1,
+    "data": undefined,
+    "message": "",
+  },
+  "id": 5,
+  "jsonrpc": "2.0",
+}
+`;
+
+exports[`notification serializer serializes a notification with an array of params 1`] = `
+Object {
+  "jsonrpc": "2.0",
+  "method": "asdffdsa",
+  "params": Array [
+    "one",
+    2,
+    "three",
+  ],
+}
+`;
+
+exports[`notification serializer serializes a notification with no params 1`] = `
+Object {
+  "jsonrpc": "2.0",
+  "method": "aNotification",
+  "params": undefined,
+}
+`;
+
+exports[`request serializer serializes a request with a numeric id 1`] = `
+Object {
+  "id": -7,
+  "jsonrpc": "2.0",
+  "method": "foo",
+  "params": undefined,
+}
+`;
+
+exports[`request serializer serializes a request with a string id 1`] = `
+Object {
+  "id": "foo",
+  "jsonrpc": "2.0",
+  "method": "method",
+  "params": undefined,
+}
+`;
+
+exports[`request serializer serializes a request with an array of params 1`] = `
+Object {
+  "id": -803,
+  "jsonrpc": "2.0",
+  "method": "mmm",
+  "params": Array [
+    3,
+    "seven",
+  ],
+}
+`;
+
+exports[`response serializer serializes a response with a numeric id 1`] = `
+Object {
+  "id": 7654,
+  "jsonrpc": "2.0",
+  "result": null,
+}
+`;
+
+exports[`response serializer serializes a response with a string id 1`] = `
+Object {
+  "id": "ayedee",
+  "jsonrpc": "2.0",
+  "result": Object {
+    "result": Object {
+      "result": Array [
+        "result",
+      ],
+    },
+  },
+}
+`;

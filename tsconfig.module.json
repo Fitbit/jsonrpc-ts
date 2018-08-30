@@ -1,0 +1,9 @@
+
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "module": "es6",
+    "declaration": false,
+    "outDir": "mod"
+  }
+}

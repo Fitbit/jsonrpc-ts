@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`throws when decode fails 1`] = `"Invalid value \\"foo\\" supplied to : DateFromString"`;
