@@ -12,7 +12,7 @@
   "scripts": {
     "build": "rm -rf lib mod && tsc -p tsconfig.build.json && tsc -p tsconfig.module.json",
     "lint": "tslint -c tslint.json -p tsconfig.json",
-    "test": "jest",
+    "test": "npm run lint && jest",
     "prepare": "npm run test && npm run build"
   },
   "author": "Fitbit, Inc.",
