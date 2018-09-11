@@ -3,8 +3,6 @@ import ErrorSubclass from 'error-subclass';
 import * as t from 'io-ts';
 import { failure } from 'io-ts/lib/PathReporter';
 
-import { Peer } from './peer';
-
 export class DecodeError extends ErrorSubclass {
   static displayName = 'DecodeError';
 }
