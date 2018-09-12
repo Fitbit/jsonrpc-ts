@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 
-import { decode, DecodeError } from './decode';
+import { decode } from './decode';
 
 // Lifted from the io-ts README
 // tslint:disable-next-line:variable-name
