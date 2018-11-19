@@ -1,6 +1,6 @@
 module.exports = {
   transform: {
-    '^.+\\.(ts|tsx)$': '<rootDir>/node_modules/ts-jest/preprocessor.js',
+    '^.+\\.(ts|tsx)$': 'ts-jest',
   },
   moduleFileExtensions: [
     'ts',
@@ -13,5 +13,4 @@ module.exports = {
     '<rootDir>/dist',
   ],
   testEnvironment: 'node',
-  mapCoverage: true,
 };
