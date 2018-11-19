@@ -51,9 +51,9 @@ export const RequestJSON = t.intersection([
     jsonrpc: t.literal('2.0'),
     method: t.string,
     id: RPCID,
-    params: t.union([RPCParams, t.undefined]),
   }),
   t.partial({
+    params: RPCParams,
     result: t.undefined,
     error: t.undefined,
   }),

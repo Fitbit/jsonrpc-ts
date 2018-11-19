@@ -148,12 +148,12 @@ describe('dispatches a request', () => {
   });
 });
 
-it(`returns the request handler function's return value`, () => {
+it('returns the request handler function\'s return value', () => {
   dispatcher.method('yarr', t.any, () => 'avast matey');
   expect(dispatcher.onRequest('yarr', [])).toBe('avast matey');
 });
 
-it(`disallows registering methods beginning with 'rpc.'`, () => {
+it('disallows registering methods beginning with \'rpc.\'', () => {
   const handler = jest.fn();
   expect(() => dispatcher.method('rpc.foo', t.any, handler))
     .toThrow(TypeError);
