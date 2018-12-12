@@ -83,6 +83,61 @@ describe('InvalidParams', () => {
   });
 });
 
+describe('MethodCallTimeout', () => {
+  it('constructs objects which are instances of MethodCallTimeout', () => {
+    const obj = new peer.MethodCallTimeout('foo');
+    expect(obj).toBeInstanceOf(Error);
+    expect(obj).toBeInstanceOf(peer.MethodCallError);
+    expect(obj).toBeInstanceOf(peer.MethodCallTimeout);
+  });
+
+  it('sets the message and method', () => {
+    const method = 'some.method.name';
+    expect(new peer.MethodCallTimeout(method)).toMatchObject({
+      method,
+      message: `No response received for RPC call to '${method}'`,
+    });
+  });
+});
+
+describe('RPCStreamClosed', () => {
+  it('constructs objects which are instances of RPCStreamClosed', () => {
+    const obj = new peer.RPCStreamClosed('foo');
+    expect(obj).toBeInstanceOf(Error);
+    expect(obj).toBeInstanceOf(peer.MethodCallError);
+    expect(obj).toBeInstanceOf(peer.RPCStreamClosed);
+  });
+
+  it('sets the error message and method', () => {
+    const method = 'some.method.name';
+    expect(new peer.RPCStreamClosed(method)).toMatchObject({
+      method,
+      message: `RPC call to '${method}' could not be completed as the RPC stream is closed`,
+    });
+  });
+});
+
+describe('UnexpectedResponse', () => {
+  it('constructs objects which are instances of UnexpectedResponse', () => {
+    const obj = new peer.UnexpectedResponse(0);
+    expect(obj).toBeInstanceOf(Error);
+    expect(obj).toBeInstanceOf(peer.UnexpectedResponse);
+  });
+
+  it('sets the error message, kind and id', () => {
+    expect(new peer.UnexpectedResponse('eye dee', 'error')).toMatchObject({
+      id: 'eye dee',
+      kind: 'error',
+      // tslint:disable-next-line:max-line-length
+      message: 'Received error with id \'"eye dee"\', which does not correspond to any outstanding RPC call',
+    });
+  });
+
+  it('defaults to kind "response"', () => {
+    expect(new peer.UnexpectedResponse(0)).toHaveProperty('kind', 'response');
+  });
+});
+
 describe('numeric request id iterator', () => {
   it('does not repeat values', () => {
     // Not quite true; values will repeat when it wraps around.
@@ -145,9 +200,14 @@ describe('Peer', () => {
     });
   });
 
-  it('handles an unexpected response by emitting an error', (done) => {
+  it('handles an unexpected response by emitting an UnexpectedResponse error', (done) => {
     uut.once('error', (err: Error) => {
-      expect(err.message).toMatch(/Received response with id '55'/);
+      expect(err).toMatchObject({
+        message: expect.stringContaining("Received response with id \'55\'"),
+        kind: 'response',
+        id: 55,
+      });
+      expect(err).toBeInstanceOf(peer.UnexpectedResponse);
       done();
     });
     uut.write(jrpc.response(55));
@@ -168,11 +228,16 @@ describe('Peer', () => {
   });
 
   it(
-    'handles an error with an id not matching any outstanding request ' +
-    'by emitting an error',
+    // tslint:disable-next-line:max-line-length
+    'handles an error with an id not matching any outstanding request by emitting an UnexpectedResponse error',
     (done) => {
       uut.once('error', (err: Error) => {
-        expect(err.message).toMatch(/Received error with id 'yellow'/);
+        expect(err).toMatchObject({
+          message: expect.stringContaining('Received error with id \'"yellow"\''),
+          kind: 'error',
+          id: 'yellow',
+        });
+        expect(err).toBeInstanceOf(peer.UnexpectedResponse);
         done();
       });
       uut.write(jrpc.error({ id: 'yellow', message: '', code: 1 }));
@@ -361,6 +426,26 @@ describe('Peer', () => {
     uut.write(jrpc.request('foo', '', [5, 4, 3]));
   });
 
+  it('sends a response after the Writable side is closed', (done) => {
+    uut.onRequest = () => {
+      uut.end();
+      return new Promise(resolve => setImmediate(resolve));
+    };
+    uut.on('data', (value) => {
+      try {
+        const message = jrpc.parse(value);
+        expect(message).toMatchObject({
+          kind: 'response',
+          id: 'bar',
+        });
+        done();
+      } catch (e) {
+        done.fail(e);
+      }
+    });
+    uut.write(jrpc.request('bar', ''));
+  });
+
   describe('sends an internal error response', () => {
     function testInternalError(onRequest: peer.RequestHandler) {
       uut.onRequest = onRequest;
@@ -433,6 +518,15 @@ describe('Peer', () => {
         return Promise.reject(new peer.RPCError('You dun goofed', 5555));
       });
     });
+
+    test('after the Writable side is closed', (done) => {
+      testErrorResponse(done, () => {
+        uut.end();
+        return new Promise((resolve, reject) => {
+          setImmediate(() => reject(new peer.RPCError('You dun goofed', 5555)));
+        });
+      });
+    });
   });
 
   it('forwards a parse error from the deserializer to the remote peer', (done) => {
@@ -480,28 +574,23 @@ describe('Peer', () => {
     const methodCalls = [uut.callMethod('foo'), uut.callMethod('bar')];
     uut.end();
     return Promise.all(methodCalls.map((call) => {
-      return expect(call).rejects.toEqual(
-        expect.objectContaining({
-          message: expect.stringMatching(/RPC stream closed/),
-        }),
-      );
+      return expect(call).rejects.toThrow(peer.RPCStreamClosed);
     }));
   });
 
   describe('after the stream ends', () => {
     beforeEach(() => uut.end());
 
-    it('throws an error when attempting to call a method', () => {
-      expect(() => uut.callMethod('foo')).toThrow(/RPC stream closed/);
+    it('rejects when attempting to call a method', () => {
+      return expect(uut.callMethod('foo')).rejects.toThrow(peer.RPCStreamClosed);
     });
 
-    it('throws an error when attempting to send a notification', () => {
-      expect(() => uut.sendNotification('foo')).toThrow(/RPC stream closed/);
+    it('does not throw when attempting to send a notification', () => {
+      expect(() => uut.sendNotification('foo')).not.toThrow();
     });
 
-    it('throws an error when attempting to push an error', () => {
-      expect(() => uut.pushError({ code: 0, message: 'foo' }))
-        .toThrow(/RPC stream closed/);
+    it('does not throw when attempting to push an error', () => {
+      expect(() => uut.pushError({ code: 0, message: 'foo' })).not.toThrow();
     });
   });
 
@@ -555,7 +644,7 @@ describe('Peer', () => {
       beforeEach(() => uut.end());
 
       it('rejects with an error', () => expect(methodCall).rejects.toThrow(
-        /RPC stream closed/,
+        peer.RPCStreamClosed,
       ));
       it('clears the timeout timer', () => expect(clearTimeout).toBeCalled());
     });
