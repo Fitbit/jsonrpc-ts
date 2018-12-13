@@ -30,7 +30,7 @@ export const RPCID = t.union([t.Integer, t.string]);
 export type RPCID = t.TypeOf<typeof RPCID>;
 
 /** JSON-RPC Request params */
-export const RPCParams = Structured;
+export const RPCParams = t.union([Structured, t.undefined]);
 export type RPCParams = t.TypeOf<typeof RPCParams>;
 
 /** `error` member of a JSON-RPC Error object */
@@ -65,9 +65,9 @@ export const NotificationJSON = t.intersection([
   t.interface({
     jsonrpc: t.literal('2.0'),
     method: t.string,
-    params: t.union([RPCParams, t.undefined]),
   }),
   t.partial({
+    params: RPCParams,
     id: t.undefined,
     result: t.undefined,
     error: t.undefined,

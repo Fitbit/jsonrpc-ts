@@ -9,216 +9,122 @@ declare class Object {
 
 describe('parse', () => {
   describe('a valid Request', () => {
-    const vectors: {
-      desc: string;
-      id: string | number;
-      method: string;
-      params?: object | any[];
-    }[] = [
-      {
-        desc: 'with a numeric id',
-        id: -7,
-        method: 'foo.doBar/baz',
-      },
-      {
-        desc: 'with a string id',
-        id: 'three',
-        method: 'hello',
-      },
-      {
-        desc: 'with params as empty array',
-        id: 55,
-        method: 'foo',
-        params: [],
-      },
-      {
-        desc: 'with params by-position',
+    it.each([
+      ['with a numeric id', { id: -7, method: 'foo.doBar/baz' }],
+      ['with a string id', { id: 'three', method: 'hello' }],
+      ['with params as empty array', { id: 55, method: 'foo', params: [] }],
+      ['with params by-position', {
         id: 42,
         method: 'bar',
         params: [3, 'three', { three: 3 }, ['four', 'five']],
-      },
-      {
-        desc: 'with params by-name',
+      }],
+      ['with params by-name', {
         id: 8,
         method: 'baz',
         params: { foo: 'bar', quux: 'yes', 3: 5 } as object,
-      },
-    ];
-    vectors.forEach((vector) => {
-      test(vector.desc, () => {
-        const { id, method, params } = vector;
-        expect(jrpc.parse({
-          id, method, params, jsonrpc: '2.0',
-        })).toEqual({ id, method, params, kind: 'request' });
-      });
+      }],
+    ])('%s', (_, vector) => {
+      const { id, method, params } = vector;
+      // We can't reassemble the message from the spread object as any
+      // properties that do not exist in the test vector would come into
+      // existence on the reassembled message, with a value of
+      // undefined. This would invalidate the tests as a property
+      // that exists with the value undefined cannot be represented in
+      // JSON.
+      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' }))
+        .toEqual({ id, method, params, kind: 'request' });
     });
   });
 
   describe('a valid Notification', () => {
-    const vectors: {
-      desc: string;
-      method: string;
-      params?: object | any[];
-    }[] = [
-      {
-        desc: 'with no params',
-        method: 'notifoo',
-      },
-      {
-        desc: 'with params as empty array',
-        method: 'blah',
-        params: [],
-      },
-      {
-        desc: 'with params by-position',
+    it.each([
+      ['with no params', { method: 'notifoo' }],
+      ['with params as empty array', { method: 'blah', params: [] }],
+      ['with params by-position', {
         method: 'a.method',
         params: [
-                    ['hello', 'bonjour', -7.2],
+          ['hello', 'bonjour', -7.2],
           'abc',
-                    { a: 3, b: 'four' },
+          { a: 3, b: 'four' },
         ],
-      },
-      {
-        desc: 'with params by-name',
+      }],
+      ['with params by-name', {
         method: 'yo',
         params: {
           a: 1,
           b: 'two',
           c: [3, 'four', 5],
           d: { e: 'f' },
-        } as object,
-      },
-    ];
-    vectors.forEach((vector) => {
-      test(vector.desc, () => {
-        const { method, params } = vector;
-        expect(jrpc.parse({
-          method, params, jsonrpc: '2.0',
-        })).toEqual({ method, params, kind: 'notification' });
-      });
+        },
+      }],
+    ])('%s', (_, vector) => {
+      const { method, params } = vector;
+      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' }))
+        .toEqual({ method, params, kind: 'notification' });
     });
   });
 
   describe('a valid Response', () => {
-    const vectors: {
-      desc: string;
-      id: string | number;
-      result: any;
-    }[] = [
-      {
-        desc: 'with numeric id',
-        id: -7,
-        result: null,
-      },
-      {
-        desc: 'with string id',
-        id: 'abc',
-        result: null,
-      },
-      {
-        desc: 'with numeric result',
-        id: 5,
-        result: 3.7,
-      },
-      {
-        desc: 'with string result',
-        id: 48,
-        result: 'hello',
-      },
-      {
-        desc: 'with boolean result',
-        id: 1,
-        result: true,
-      },
-      {
-        desc: 'with array result',
+    it.each([
+      ['with numeric id', { id: -7, result: null }],
+      ['with string id', { id: 'abc', result: null }],
+      ['with numeric result', { id: 5, result: 3.7 }],
+      ['with string result', { id: 48, result: 'hello' }],
+      ['with boolean result', { id: 1, result: true }],
+      ['with array result', {
         id: 86,
         result: ['one', 2, { three: 3 }, [4]],
-      },
-      {
-        desc: 'with object result',
-        id: 104,
-        result: { yes: 'yup' },
-      },
-    ];
-    vectors.forEach((vector) => {
-      test(vector.desc, () => {
-        const { id, result } = vector;
-        expect(jrpc.parse({
-          id, result, jsonrpc: '2.0',
-        })).toEqual({
-          id, result, kind: 'response',
-        });
-      });
+      }],
+      ['with object result', { id: 104, result: { yes: 'yup' } }],
+    ])('%s', (_, vector) => {
+      const { id, result } = vector;
+      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' }))
+        .toEqual({ id, result, kind: 'response' });
     });
   });
 
   describe('a valid Error', () => {
-    const vectors: {
-      desc: string;
-      id: string | number | null;
-      error: {
-        code: number;
-        message: string;
-        data?: any;
-      };
-    }[] = [
-      {
-        desc: 'with no id or data',
+    it.each([
+      ['with no id or data', {
         id: null,
         error: { code: -37000, message: 'you dun goofed' },
-      },
-      {
-        desc: 'with numeric id, no data',
+      }],
+      ['with numeric id, no data', {
         id: 7,
         error: { code: 42, message: 'everything' },
-      },
-      {
-        desc: 'with string id, no data',
+      }],
+      ['with string id, no data', {
         id: 'asdf',
         error: { code: 0, message: 'zero' },
-      },
-      {
-        desc: 'with boolean data',
+      }],
+      ['with boolean data', {
         id: 2,
         error: { code: 33, message: 'm', data: false },
-      },
-      {
-        desc: 'with numeric data',
+      }],
+      ['with numeric data', {
         id: 3,
         error: { code: 34, message: 'm', data: 8 },
-      },
-      {
-        desc: 'with string data',
+      }],
+      ['with string data', {
         id: 4,
         error: { code: 35, message: 'q', data: 'nope' },
-      },
-      {
-        desc: 'with null data',
+      }],
+      ['with null data', {
         id: 88,
         error: { code: 123, message: 'yes', data: null },
-      },
-      {
-        desc: 'with array data',
+      }],
+      ['with array data', {
         id: 5,
         error: { code: 36, message: 'r', data: [1, 2, 'three'] },
-      },
-      {
-        desc: 'with object data',
+      }],
+      ['with object data', {
         id: 6,
         error: { code: 37, message: 's', data: { foo: 'bar' } },
-      },
-    ];
-
-    vectors.forEach((vector) => {
-      test(vector.desc, () => {
-        const { id, error } = vector;
-        expect(jrpc.parse({
-          id, error, jsonrpc: '2.0',
-        })).toEqual({
-          id, error, kind: 'error',
-        });
-      });
+      }],
+    ])('%s', (_, vector) => {
+      const { id, error } = vector;
+      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' }))
+        .toEqual({ id, error, kind: 'error' });
     });
   });
 
