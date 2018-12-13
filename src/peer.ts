@@ -39,13 +39,13 @@ export enum ErrorCodes {
  */
 export class RPCError extends ErrorSubclass {
   static displayName = 'RPCError';
-  readonly code: number;
-  readonly data: any;
 
-  constructor(message: string, code: number = ErrorCodes.INTERNAL_ERROR, data?: any) {
+  constructor(
+    message: string,
+    public readonly code: number = ErrorCodes.INTERNAL_ERROR,
+    public readonly data?: any,
+  ) {
     super(message);
-    this.code = code;
-    this.data = data;
   }
 
   toErrorObject(): jrpc.ErrorObject {
@@ -97,15 +97,51 @@ export class ParseError extends RPCError {
 }
 
 /**
+ * The method call could not be completed.
+ */
+export class MethodCallError extends ErrorSubclass {
+  static displayName = 'MethodCallError';
+
+  constructor(
+    public readonly method: string,
+    message = `RPC call to '${method}' could not be completed`,
+  ) {
+    super(message);
+  }
+}
+
+/**
  * No response to a method call was received in time.
  */
-export class MethodCallTimeout extends ErrorSubclass {
+export class MethodCallTimeout extends MethodCallError {
   static displayName = 'MethodCallTimeout';
-  readonly method: string;
 
   constructor(method: string) {
-    super(`${method} timed out`);
-    this.method = method;
+    super(method, `No response received for RPC call to '${method}'`);
+  }
+}
+
+/**
+ * The method call could not be completed as the Peer's writable stream
+ * has been closed.
+ */
+export class RPCStreamClosed extends MethodCallError {
+  static displayName = 'RPCStreamClosed';
+
+  constructor(method: string) {
+    super(method, `RPC call to '${method}' could not be completed as the RPC stream is closed`);
+  }
+}
+
+/**
+ * An unexpected JSON-RPC Response has been received.
+ */
+export class UnexpectedResponse extends ErrorSubclass {
+  static displayName = 'UnexpectedResponse';
+
+  constructor(public readonly id: jrpc.RPCID, public readonly kind = 'response') {
+    // tslint:disable-next-line:max-line-length
+    super(`Received ${kind} with id '${JSON.stringify(id)}', which does not correspond to any outstanding RPC call`);
   }
 }
 
@@ -155,6 +191,12 @@ export interface PeerOptions {
   idIterator?: Iterator<jrpc.RPCID>;
 }
 
+interface PendingRequest {
+  method: string;
+  resolve: (value: any) => void;
+  reject: (reason: Error) => void;
+}
+
 /**
  * A JSON-RPC Peer which reads and writes JSON-RPC objects as
  * JavaScript objects.
@@ -175,8 +217,7 @@ export class Peer extends stream.Duplex {
   onNotification?: NotificationHandler;
   requestIdIterator: Iterator<jrpc.RPCID>;
 
-  private pendingRequests = new Map<
-      jrpc.RPCID, { resolve: (value: any) => void, reject: (reason: Error) => void }>();
+  private pendingRequests = new Map<jrpc.RPCID, PendingRequest>();
 
   ended = false;
 
@@ -201,13 +242,10 @@ export class Peer extends stream.Duplex {
 
   private onend() {
     this.ended = true;
-    this.pendingRequests.forEach(({ reject }) => {
-      reject(new Error('RPC stream closed'));
+    this.pendingRequests.forEach(({ method, reject }) => {
+      reject(new RPCStreamClosed(method));
     });
-  }
-
-  private assertNotEnded() {
-    if (this.ended) throw new Error('RPC stream closed');
+    this.pendingRequests.clear();
   }
 
   /**
@@ -223,7 +261,7 @@ export class Peer extends stream.Duplex {
     params?: jrpc.RPCParams,
     { timeout = undefined as number | undefined } = {},
   ): Promise<any> {
-    this.assertNotEnded();
+    if (this.ended) return Promise.reject(new RPCStreamClosed(method));
     const idResult = this.requestIdIterator.next();
     if (idResult.done) {
       throw new Error(
@@ -245,15 +283,14 @@ export class Peer extends stream.Duplex {
 
     let timer: NodeJS.Timer | undefined;
 
-    const promise = new Promise(
-      (resolve: (value: any) => void, reject: (reason: any) => void) => {
-        this.push(jrpc.request(id, method, params));
-        this.pendingRequests.set(id, { resolve, reject });
+    const promise = new Promise<any>((resolve, reject) => {
+      this.push(jrpc.request(id, method, params));
+      this.pendingRequests.set(id, { method, resolve, reject });
 
-        if (timeout !== undefined) {
-          timer = setTimeout(() => reject(new MethodCallTimeout(method)), timeout);
-        }
-      });
+      if (timeout !== undefined) {
+        timer = setTimeout(() => reject(new MethodCallTimeout(method)), timeout);
+      }
+    });
 
     if (timer !== undefined) {
       const timerRef = timer;
@@ -274,14 +311,12 @@ export class Peer extends stream.Duplex {
 
   /** Send an RPC Notification object to the remote peer. */
   sendNotification(method: string, params?: jrpc.RPCParams) {
-    this.assertNotEnded();
-    this.push(jrpc.notification(method, params));
+    return this.push(jrpc.notification(method, params));
   }
 
   /** Push an RPC Error object to the remote peer. */
   pushError(error: jrpc.ErrorObject) {
-    this.assertNotEnded();
-    this.push(jrpc.error(error));
+    return this.push(jrpc.error(error));
   }
 
   // tslint:disable-next-line:function-name
@@ -392,8 +427,7 @@ export class Peer extends stream.Duplex {
       this.pendingRequests.delete(id);
       rpcCall.resolve(result);
     } else {
-      throw new Error(
-        `Received response with id '${id}', which does not correspond to any outstanding RPC call`);
+      throw new UnexpectedResponse(id);
     }
   }
 
@@ -413,8 +447,7 @@ export class Peer extends stream.Duplex {
         this.pendingRequests.delete(id);
         rpcCall.reject(rpcError);
       } else {
-        throw new Error(
-          `Received error with id '${id}', which does not correspond to any outstanding RPC call`);
+        throw new UnexpectedResponse(id, 'error');
       }
     } else {
       throw rpcError;
