@@ -2,6 +2,8 @@
 import ErrorSubclass from 'error-subclass';
 import * as t from 'io-ts';
 import { failure } from 'io-ts/lib/PathReporter';
+import { pipe } from 'fp-ts/lib/pipeable';
+import { fold } from 'fp-ts/lib/Either';
 
 export class DecodeError extends ErrorSubclass {
   static displayName = 'DecodeError';
@@ -26,8 +28,14 @@ export class DecodeError extends ErrorSubclass {
  */
 export function decode<A, O, I>(type: t.Type<A, O, I>) {
   return (value: I): A => {
-    return type.decode(value).getOrElseL((errors) => {
-      throw new DecodeError(failure(errors).join('\n'));
-    });
+    return pipe(
+      type.decode(value),
+      fold(
+        (errors) => {
+          throw new DecodeError(failure(errors).join('\n'));
+        },
+        tag => tag,
+      ),
+    );
   };
 }
