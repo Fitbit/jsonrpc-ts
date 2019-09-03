@@ -9,7 +9,7 @@ declare class Object {
 
 describe('parse', () => {
   describe('a valid Request', () => {
-    it.each([
+    it.each<[string, Partial<jrpc.RequestJSON>]>([
       ['with a numeric id', { id: -7, method: 'foo.doBar/baz' }],
       ['with a string id', { id: 'three', method: 'hello' }],
       ['with params as empty array', { id: 55, method: 'foo', params: [] }],
@@ -37,7 +37,7 @@ describe('parse', () => {
   });
 
   describe('a valid Notification', () => {
-    it.each([
+    it.each<[string, Partial<jrpc.NotificationJSON>]>([
       ['with no params', { method: 'notifoo' }],
       ['with params as empty array', { method: 'blah', params: [] }],
       ['with params by-position', {
@@ -65,7 +65,7 @@ describe('parse', () => {
   });
 
   describe('a valid Response', () => {
-    it.each([
+    it.each<[string, Partial<jrpc.ResponseJSON>]>([
       ['with numeric id', { id: -7, result: null }],
       ['with string id', { id: 'abc', result: null }],
       ['with numeric result', { id: 5, result: 3.7 }],
@@ -84,7 +84,7 @@ describe('parse', () => {
   });
 
   describe('a valid Error', () => {
-    it.each([
+    it.each<[string, Partial<jrpc.ErrorJSON>]>([
       ['with no id or data', {
         id: null,
         error: { code: -37000, message: 'you dun goofed' },

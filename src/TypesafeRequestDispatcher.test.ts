@@ -1,4 +1,5 @@
 import * as t from 'io-ts';
+import { either } from 'fp-ts/lib/Either';
 
 import * as peer from './peer';
 import TypesafeRequestDispatcher from './TypesafeRequestDispatcher';
@@ -15,10 +16,13 @@ const DateFromString = new t.Type<any, Date>(
   'DateFromString',
   (v): v is Date => v instanceof Date,
   (v, c) =>
-    t.string.validate(v, c).chain((s) => {
-      const d = new Date(s);
-      return isNaN(d.getTime()) ? t.failure(s, c) : t.success(d);
-    }),
+    either.chain(
+      t.string.validate(v, c),
+      (s) => {
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? t.failure(s, c) : t.success(d);
+      },
+    ),
   a => a.toISOString(),
 );
 

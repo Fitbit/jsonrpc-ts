@@ -1,8 +1,8 @@
 /** Request and notificaiton dispatchers for JSON-RPC peers */
 
-import { isRight } from 'fp-ts/lib/Either';
 import * as t from 'io-ts';
 import { PathReporter } from 'io-ts/lib/PathReporter';
+import { isRight } from 'fp-ts/lib/Either';
 
 import * as jrpc from './protocol';
 import * as peer from './peer';
@@ -106,8 +106,9 @@ export default class TypesafeRequestDispatcher {
       const validationErrors: string[][] = [];
       for (const { fn, paramsType } of handlers) {
         const decoded = paramsType.decode(params);
+
         if (isRight(decoded)) {
-          return fn(decoded.value);
+          return fn(decoded.right);
         }
         validationErrors.push(PathReporter.report(decoded));
       }
@@ -123,7 +124,7 @@ export default class TypesafeRequestDispatcher {
       for (const { fn, paramsType } of handlers) {
         const decoded = paramsType.decode(params);
         if (isRight(decoded)) {
-          fn(decoded.value);
+          fn(decoded.right);
           return;
         }
       }
