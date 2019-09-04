@@ -1,6 +1,6 @@
 {
   "name": "@fitbit/jsonrpc-ts",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A very flexible library for building JSON-RPC 2.0 endpoints.",
   "files": [
     "lib",
@@ -27,8 +27,6 @@
     "@types/jest": "^24.0.18",
     "@types/node": "^12.7.3",
     "coveralls": "^3.0.6",
-    "fp-ts": "2.0.5",
-    "io-ts": "2.0.1",
     "jest": "^24.9.0",
     "ts-jest": "^24.0.2",
     "tslint": "^5.19.0",
@@ -37,7 +35,9 @@
   },
   "dependencies": {
     "@types/error-subclass": "^2.2.0",
-    "error-subclass": "^2.2.0"
+    "error-subclass": "^2.2.0",
+    "fp-ts": "2.0.5",
+    "io-ts": "2.0.1"
   },
   "peerDependencies": {
     "io-ts": "2.0.1",
