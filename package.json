@@ -36,7 +36,7 @@
   "dependencies": {
     "@types/error-subclass": "^2.2.0",
     "error-subclass": "^2.2.0",
-    "fp-ts": "2.2.0",
+    "fp-ts": "2.3.0",
     "io-ts": "2.0.1"
   },
   "peerDependencies": {
