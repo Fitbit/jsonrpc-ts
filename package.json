@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/Fitbit/jsonrpc-ts#readme",
   "devDependencies": {
-    "@types/jest": "^24.0.23",
+    "@types/jest": "^25.1.0",
     "@types/node": "^12.12.15",
     "coveralls": "^3.0.9",
     "jest": "^24.9.0",
