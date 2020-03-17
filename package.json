@@ -24,20 +24,20 @@
   },
   "homepage": "https://github.com/Fitbit/jsonrpc-ts#readme",
   "devDependencies": {
-    "@types/jest": "^24.0.23",
-    "@types/node": "^12.12.15",
+    "@types/jest": "^25.1.4",
+    "@types/node": "^13.9.1",
     "coveralls": "^3.0.9",
-    "jest": "^24.9.0",
-    "ts-jest": "^24.2.0",
-    "tslint": "^5.20.1",
+    "jest": "^25.1.0",
+    "ts-jest": "^25.2.1",
+    "tslint": "^6.1.0",
     "tslint-config-airbnb": "^5.11.2",
-    "typescript": "^3.7.3"
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "@types/error-subclass": "^2.2.0",
     "error-subclass": "^2.2.0",
-    "fp-ts": "2.2.0",
-    "io-ts": "2.0.1"
+    "fp-ts": "2.5.3",
+    "io-ts": "2.1.2"
   },
   "peerDependencies": {
     "fp-ts": "2.2.0",
