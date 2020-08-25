@@ -1,6 +1,6 @@
 {
   "name": "@fitbit/jsonrpc-ts",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "A very flexible library for building JSON-RPC 2.0 endpoints.",
   "files": [
     "lib",
@@ -40,7 +40,7 @@
     "io-ts": "2.2.10"
   },
   "peerDependencies": {
-    "fp-ts": "2.5.3",
-    "io-ts": "2.1.2"
+    "fp-ts": "2.8.2",
+    "io-ts": "2.2.10"
   }
 }
