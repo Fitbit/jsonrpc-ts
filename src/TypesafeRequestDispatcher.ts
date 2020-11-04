@@ -12,8 +12,11 @@ export interface TypedHandlerFn<T extends t.Any = t.Any> {
   paramsType: T;
 }
 
-export type DefaultNotificationHandler =
-  (this: void, method: string, params: jrpc.RPCParams) => void;
+export type DefaultNotificationHandler = (
+  this: void,
+  method: string,
+  params: jrpc.RPCParams,
+) => void;
 
 /**
  * A method dispatcher which performs run-time type checking to
@@ -77,7 +80,11 @@ export default class TypesafeRequestDispatcher {
     impl: (params: t.TypeOf<T>) => Promise<any> | any,
   ): this {
     TypesafeRequestDispatcher.register(
-      this.requestHandlers, name, paramsType, impl);
+      this.requestHandlers,
+      name,
+      paramsType,
+      impl,
+    );
     return this;
   }
 
@@ -94,7 +101,11 @@ export default class TypesafeRequestDispatcher {
     impl: (params: t.TypeOf<T>) => void,
   ): this {
     TypesafeRequestDispatcher.register(
-      this.notificationHandlers, name, paramsType, impl);
+      this.notificationHandlers,
+      name,
+      paramsType,
+      impl,
+    );
     return this;
   }
 
@@ -114,11 +125,16 @@ export default class TypesafeRequestDispatcher {
       }
       // None of the implementations matched.
       throw new peer.InvalidParams(
-        `Invalid parameters for method ${method}`, validationErrors);
+        `Invalid parameters for method ${method}`,
+        validationErrors,
+      );
     }
-  }
+  };
 
-  onNotification: peer.NotificationHandler = (method: string, params: jrpc.RPCParams) => {
+  onNotification: peer.NotificationHandler = (
+    method: string,
+    params: jrpc.RPCParams,
+  ) => {
     const handlers = this.notificationHandlers.get(method);
     if (handlers !== undefined) {
       for (const { fn, paramsType } of handlers) {
@@ -130,5 +146,5 @@ export default class TypesafeRequestDispatcher {
       }
     }
     this.defaultNotificationHandler(method, params);
-  }
+  };
 }

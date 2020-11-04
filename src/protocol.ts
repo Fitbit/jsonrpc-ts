@@ -182,7 +182,11 @@ export function parse(obj: object): Message {
 }
 
 /** Construct a JSON-RPC Request object. */
-export function request(id: RPCID, method: string, params?: RPCParams): RequestJSON {
+export function request(
+  id: RPCID,
+  method: string,
+  params?: RPCParams,
+): RequestJSON {
   if (!RPCID.is(id)) {
     throw new TypeError('Request ID must be a string or integer');
   }
@@ -190,7 +194,10 @@ export function request(id: RPCID, method: string, params?: RPCParams): RequestJ
 }
 
 /** Construct a JSON-RPC Notification object. */
-export function notification(method: string, params?: RPCParams): NotificationJSON {
+export function notification(
+  method: string,
+  params?: RPCParams,
+): NotificationJSON {
   return { method, params, jsonrpc: '2.0' };
 }
 
@@ -199,7 +206,7 @@ export function response(id: RPCID, result?: Some): ResponseJSON {
   if (!RPCID.is(id)) {
     throw new TypeError('Response ID must be a string or integer');
   }
-    // tslint:disable-next-line:no-null-keyword
+  // tslint:disable-next-line:no-null-keyword
   const nulledResult = result !== undefined ? result : null;
   return { id, jsonrpc: '2.0', result: nulledResult };
 }
@@ -212,9 +219,9 @@ export interface ErrorObject extends RPCError {
 /** Construct a JSON-RPC Error object. */
 export function error(error: ErrorObject): ErrorJSON {
   const { id, code, message, data } = error;
-    // tslint:disable-next-line:no-null-keyword
+  // tslint:disable-next-line:no-null-keyword
   const nulledId = id !== undefined ? id : null;
-    // tslint:disable-next-line:no-null-keyword
+  // tslint:disable-next-line:no-null-keyword
   if (nulledId !== null && !RPCID.is(id)) {
     throw new TypeError('Error ID must be string, integer, null or undefined');
   }

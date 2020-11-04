@@ -16,14 +16,11 @@ const DateFromString = new t.Type<any, Date>(
   'DateFromString',
   (v): v is Date => v instanceof Date,
   (v, c) =>
-    either.chain(
-      t.string.validate(v, c),
-      (s) => {
-        const d = new Date(s);
-        return isNaN(d.getTime()) ? t.failure(s, c) : t.success(d);
-      },
-    ),
-  a => a.toISOString(),
+    either.chain(t.string.validate(v, c), (s) => {
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? t.failure(s, c) : t.success(d);
+    }),
+  (a) => a.toISOString(),
 );
 
 describe('swallows the notification', () => {
@@ -111,8 +108,7 @@ it('throws InvalidParams when params match none of the registered handlers for a
   dispatcher
     .method('foo', t.tuple([t.string, t.number]), sentinel)
     .method('foo', t.tuple([t.number, t.boolean]), sentinel);
-  expect(() => dispatcher.onRequest('foo', [true]))
-    .toThrow(peer.InvalidParams);
+  expect(() => dispatcher.onRequest('foo', [true])).toThrow(peer.InvalidParams);
   expect(sentinel).not.toBeCalled();
 });
 
@@ -152,15 +148,15 @@ describe('dispatches a request', () => {
   });
 });
 
-it('returns the request handler function\'s return value', () => {
+it("returns the request handler function's return value", () => {
   dispatcher.method('yarr', t.any, () => 'avast matey');
   expect(dispatcher.onRequest('yarr', [])).toBe('avast matey');
 });
 
-it('disallows registering methods beginning with \'rpc.\'', () => {
+it("disallows registering methods beginning with 'rpc.'", () => {
   const handler = jest.fn();
-  expect(() => dispatcher.method('rpc.foo', t.any, handler))
-    .toThrow(TypeError);
-  expect(() => dispatcher.notification('rpc.foo', t.any, handler))
-    .toThrow(TypeError);
+  expect(() => dispatcher.method('rpc.foo', t.any, handler)).toThrow(TypeError);
+  expect(() => dispatcher.notification('rpc.foo', t.any, handler)).toThrow(
+    TypeError,
+  );
 });

@@ -5,19 +5,23 @@ jest.useFakeTimers();
 
 describe('RPCError', () => {
   it('defaults to code INTERNAL_ERROR and undefined data', () => {
-    expect(new peer.RPCError('foo')).toEqual(expect.objectContaining({
-      message: 'foo',
-      code: peer.ErrorCodes.INTERNAL_ERROR,
-      data: undefined,
-    }));
+    expect(new peer.RPCError('foo')).toEqual(
+      expect.objectContaining({
+        message: 'foo',
+        code: peer.ErrorCodes.INTERNAL_ERROR,
+        data: undefined,
+      }),
+    );
   });
 
   it('allows the code to be overridden', () => {
-    expect(new peer.RPCError('asdf', 12345)).toEqual(expect.objectContaining({
-      message: 'asdf',
-      code: 12345,
-      data: undefined,
-    }));
+    expect(new peer.RPCError('asdf', 12345)).toEqual(
+      expect.objectContaining({
+        message: 'asdf',
+        code: 12345,
+        data: undefined,
+      }),
+    );
   });
 
   it('saves the data passed to the constructor', () => {
@@ -27,7 +31,8 @@ describe('RPCError', () => {
         message: 'uh oh',
         code: 54321,
         data: expectedData,
-      }));
+      }),
+    );
   });
 
   it('copies the info to an ErrorObject', () => {
@@ -54,7 +59,8 @@ describe('MethodNotFound', () => {
         message: 'You are wrong',
         code: peer.ErrorCodes.METHOD_NOT_FOUND,
         data: 'yes',
-      }));
+      }),
+    );
   });
 
   it('constructs objects which are instances of MethodNotFound', () => {
@@ -67,12 +73,15 @@ describe('MethodNotFound', () => {
 
 describe('InvalidParams', () => {
   it('sets the error code to INVALID_PARAMS', () => {
-    expect(new peer.InvalidParams('No bueno', 'what nonsense was that?'))
-      .toEqual(expect.objectContaining({
+    expect(
+      new peer.InvalidParams('No bueno', 'what nonsense was that?'),
+    ).toEqual(
+      expect.objectContaining({
         message: 'No bueno',
         code: peer.ErrorCodes.INVALID_PARAMS,
         data: 'what nonsense was that?',
-      }));
+      }),
+    );
   });
 
   it('constructs objects which are instances of InvalidParams', () => {
@@ -129,7 +138,8 @@ describe('UnexpectedResponse', () => {
       id: 'eye dee',
       kind: 'error',
       // tslint:disable-next-line:max-line-length
-      message: 'Received error with id \'"eye dee"\', which does not correspond to any outstanding RPC call',
+      message:
+        'Received error with id \'"eye dee"\', which does not correspond to any outstanding RPC call',
     });
   });
 
@@ -203,7 +213,7 @@ describe('Peer', () => {
   it('handles an unexpected response by emitting an UnexpectedResponse error', (done) => {
     uut.once('error', (err: Error) => {
       expect(err).toMatchObject({
-        message: expect.stringContaining("Received response with id \'55\'"),
+        message: expect.stringContaining("Received response with id '55'"),
         kind: 'response',
         id: 55,
       });
@@ -227,21 +237,19 @@ describe('Peer', () => {
     uut.write(jrpc.error(errorContents));
   });
 
-  it(
-    // tslint:disable-next-line:max-line-length
-    'handles an error with an id not matching any outstanding request by emitting an UnexpectedResponse error',
-    (done) => {
-      uut.once('error', (err: Error) => {
-        expect(err).toMatchObject({
-          message: expect.stringContaining('Received error with id \'"yellow"\''),
-          kind: 'error',
-          id: 'yellow',
-        });
-        expect(err).toBeInstanceOf(peer.UnexpectedResponse);
-        done();
+  it(// tslint:disable-next-line:max-line-length
+  'handles an error with an id not matching any outstanding request by emitting an UnexpectedResponse error', (done) => {
+    uut.once('error', (err: Error) => {
+      expect(err).toMatchObject({
+        message: expect.stringContaining('Received error with id \'"yellow"\''),
+        kind: 'error',
+        id: 'yellow',
       });
-      uut.write(jrpc.error({ id: 'yellow', message: '', code: 1 }));
+      expect(err).toBeInstanceOf(peer.UnexpectedResponse);
+      done();
     });
+    uut.write(jrpc.error({ id: 'yellow', message: '', code: 1 }));
+  });
 
   function expectInvalidRequest(done: jest.DoneCallback) {
     uut.once('data', (value: any) => {
@@ -270,12 +278,14 @@ describe('Peer', () => {
   it('sends a request to the remote peer and resolves the response', () => {
     uut.once('data', (value: any) => {
       const message = jrpc.parse(value);
-      expect(message).toEqual(expect.objectContaining({
-        kind: 'request',
-        method: 'myRpcCall',
-        params: [true, 3, 'yes'],
-        id: expect.anything(),
-      }));
+      expect(message).toEqual(
+        expect.objectContaining({
+          kind: 'request',
+          method: 'myRpcCall',
+          params: [true, 3, 'yes'],
+          id: expect.anything(),
+        }),
+      );
       if (message.kind === 'request') {
         uut.write(jrpc.response(message.id, 'this is a response'));
       }
@@ -298,7 +308,7 @@ describe('Peer', () => {
         uut.write(jrpc.response(message.id));
       }
     });
-    return Promise.all(['a', 'b', 'c'].map(method => uut.callMethod(method)));
+    return Promise.all(['a', 'b', 'c'].map((method) => uut.callMethod(method)));
   });
 
   it('resolves method calls regardless of the order responses are received', () => {
@@ -320,9 +330,9 @@ describe('Peer', () => {
     });
 
     const paramses = [['first', 1, 7], ['second'], ['third', 8], ['fourth', 0]];
-    return expect(Promise.all(
-        paramses.map(p => uut.callMethod('foo', p))))
-          .resolves.toEqual(paramses);
+    return expect(
+      Promise.all(paramses.map((p) => uut.callMethod('foo', p))),
+    ).resolves.toEqual(paramses);
   });
 
   it('rejects the method call promise when the remote peer sends an error response', () => {
@@ -336,7 +346,8 @@ describe('Peer', () => {
       expect.objectContaining({
         message: 'fail!',
         code: 3,
-      }));
+      }),
+    );
   });
 
   it('sends notifications', (done) => {
@@ -364,7 +375,7 @@ describe('Peer', () => {
 
   it(
     'calls the onRequest handler when a request is received ' +
-    'and sends a synchronous response',
+      'and sends a synchronous response',
     (done) => {
       uut.onRequest = function (method: string, params: jrpc.RPCParams) {
         expect(this).toBe(undefined);
@@ -404,7 +415,8 @@ describe('Peer', () => {
       uut.write(jrpc.request('asdf', 'add', [1, 4, 2]));
       uut.write(jrpc.request('yes', 'add', [5, 5, 5]));
       uut.write(jrpc.request(123, 'add', [4, -6, 10]));
-    });
+    },
+  );
 
   it('sends a response when the onRequest handler returns a promise', (done) => {
     uut.onRequest = (method: string, params: jrpc.RPCParams) => {
@@ -429,7 +441,7 @@ describe('Peer', () => {
   it('sends a response after the Writable side is closed', (done) => {
     uut.onRequest = () => {
       uut.end();
-      return new Promise(resolve => setImmediate(resolve));
+      return new Promise((resolve) => setImmediate(resolve));
     };
     uut.on('data', (value) => {
       try {
@@ -488,7 +500,10 @@ describe('Peer', () => {
   });
 
   describe('sends an error response', () => {
-    function testErrorResponse(done: jest.DoneCallback, onRequest: peer.RequestHandler) {
+    function testErrorResponse(
+      done: jest.DoneCallback,
+      onRequest: peer.RequestHandler,
+    ) {
       uut.onRequest = onRequest;
       uut.on('error', done.fail);
       uut.on('data', (value: any) => {
@@ -554,8 +569,9 @@ describe('Peer', () => {
     uut.requestIdIterator = [1, 2, 1, 2][Symbol.iterator]();
     uut.callMethod('foo');
     uut.callMethod('bar');
-    expect(() => uut.callMethod('baz'))
-      .toThrow(/iterator yielded a value which was already used/);
+    expect(() => uut.callMethod('baz')).toThrow(
+      /iterator yielded a value which was already used/,
+    );
   });
 
   it('throws when the request id iterator is done', () => {
@@ -573,16 +589,20 @@ describe('Peer', () => {
   it('rejects all outstanding method calls when the stream ends', () => {
     const methodCalls = [uut.callMethod('foo'), uut.callMethod('bar')];
     uut.end();
-    return Promise.all(methodCalls.map((call) => {
-      return expect(call).rejects.toThrow(peer.RPCStreamClosed);
-    }));
+    return Promise.all(
+      methodCalls.map((call) => {
+        return expect(call).rejects.toThrow(peer.RPCStreamClosed);
+      }),
+    );
   });
 
   describe('after the stream ends', () => {
     beforeEach(() => uut.end());
 
     it('rejects when attempting to call a method', () => {
-      return expect(uut.callMethod('foo')).rejects.toThrow(peer.RPCStreamClosed);
+      return expect(uut.callMethod('foo')).rejects.toThrow(
+        peer.RPCStreamClosed,
+      );
     });
 
     it('does not throw when attempting to send a notification', () => {
@@ -643,9 +663,8 @@ describe('Peer', () => {
     describe('and the stream ends', () => {
       beforeEach(() => uut.end());
 
-      it('rejects with an error', () => expect(methodCall).rejects.toThrow(
-        peer.RPCStreamClosed,
-      ));
+      it('rejects with an error', () =>
+        expect(methodCall).rejects.toThrow(peer.RPCStreamClosed));
       it('clears the timeout timer', () => expect(clearTimeout).toBeCalled());
     });
   });

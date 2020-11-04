@@ -34,7 +34,7 @@ export function decode<A, O, I>(type: t.Type<A, O, I>) {
         (errors) => {
           throw new DecodeError(failure(errors).join('\n'));
         },
-        tag => tag,
+        (tag) => tag,
       ),
     );
   };
