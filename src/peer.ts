@@ -3,7 +3,7 @@
  *
  * The peer is a Duplex stream which makes it easy to create a program
  * which talks JSON-RPC 2.0 over any reliable transport.
-*/
+ */
 
 import * as stream from 'stream';
 
@@ -129,7 +129,10 @@ export class RPCStreamClosed extends MethodCallError {
   static displayName = 'RPCStreamClosed';
 
   constructor(method: string) {
-    super(method, `RPC call to '${method}' could not be completed as the RPC stream is closed`);
+    super(
+      method,
+      `RPC call to '${method}' could not be completed as the RPC stream is closed`,
+    );
   }
 }
 
@@ -139,9 +142,16 @@ export class RPCStreamClosed extends MethodCallError {
 export class UnexpectedResponse extends ErrorSubclass {
   static displayName = 'UnexpectedResponse';
 
-  constructor(public readonly id: jrpc.RPCID, public readonly kind = 'response') {
+  constructor(
+    public readonly id: jrpc.RPCID,
+    public readonly kind = 'response',
+  ) {
     // tslint:disable-next-line:max-line-length
-    super(`Received ${kind} with id '${JSON.stringify(id)}', which does not correspond to any outstanding RPC call`);
+    super(
+      `Received ${kind} with id '${JSON.stringify(
+        id,
+      )}', which does not correspond to any outstanding RPC call`,
+    );
   }
 }
 
@@ -152,9 +162,11 @@ export class NumericIdIterator implements Iterator<jrpc.RPCID> {
   state: number;
 
   constructor(initialValue = 0) {
-    if (initialValue % 1 !== 0 ||
-        initialValue > Number.MAX_SAFE_INTEGER ||
-        initialValue < Number.MIN_SAFE_INTEGER) {
+    if (
+      initialValue % 1 !== 0 ||
+      initialValue > Number.MAX_SAFE_INTEGER ||
+      initialValue < Number.MIN_SAFE_INTEGER
+    ) {
       throw new TypeError('Initial value must be an integer');
     }
     this.state = initialValue;
@@ -179,12 +191,19 @@ export class NumericIdIterator implements Iterator<jrpc.RPCID> {
  * response. If the function throws, or if it returns a Promise which
  * rejects, an Error response will be sent to the remote peer.
  */
-export type RequestHandler =
-    (this: void, method: string, params: jrpc.RPCParams) => Promise<any> | any;
+export type RequestHandler = (
+  this: void,
+  method: string,
+  params: jrpc.RPCParams,
+) => Promise<any> | any;
 /**
  * A function which handles RPC notifications from the remote peer.
  */
-export type NotificationHandler = (this: void, method: string, params: jrpc.RPCParams) => void;
+export type NotificationHandler = (
+  this: void,
+  method: string,
+  params: jrpc.RPCParams,
+) => void;
 
 export interface PeerOptions {
   /** Custom iterator yielding request IDs. Must be infinite. */
@@ -222,7 +241,10 @@ export class Peer extends stream.Duplex {
   ended = false;
 
   constructor(
-    handlers: { onRequest?: RequestHandler, onNotification?: NotificationHandler },
+    handlers: {
+      onRequest?: RequestHandler;
+      onNotification?: NotificationHandler;
+    },
     options: PeerOptions = {},
   ) {
     super({
@@ -265,7 +287,8 @@ export class Peer extends stream.Duplex {
     const idResult = this.requestIdIterator.next();
     if (idResult.done) {
       throw new Error(
-        'Out of Request IDs! Request ID iterator is not infinite');
+        'Out of Request IDs! Request ID iterator is not infinite',
+      );
     }
     const id = idResult.value;
     if (this.pendingRequests.has(id)) {
@@ -278,7 +301,8 @@ export class Peer extends stream.Duplex {
       // this edge-case to happen with a well-behaved id iterator that
       // it's not worth trying to recover gracefully.
       throw new Error(
-        'Request ID iterator yielded a value which was already used in a pending request');
+        'Request ID iterator yielded a value which was already used in a pending request',
+      );
     }
 
     let timer: NodeJS.Timer | undefined;
@@ -288,7 +312,10 @@ export class Peer extends stream.Duplex {
       this.pendingRequests.set(id, { method, resolve, reject });
 
       if (timeout !== undefined) {
-        timer = setTimeout(() => reject(new MethodCallTimeout(method)), timeout);
+        timer = setTimeout(
+          () => reject(new MethodCallTimeout(method)),
+          timeout,
+        );
       }
     });
 
@@ -379,21 +406,23 @@ export class Peer extends stream.Duplex {
     if (this.onRequest) {
       let promise: Promise<any>;
       try {
-        promise = Promise.resolve(this.onRequest.call(
-          undefined, request.method, request.params));
+        promise = Promise.resolve(
+          this.onRequest.call(undefined, request.method, request.params),
+        );
       } catch (e) {
         promise = Promise.reject(e);
       }
       promise
-        .then(value => this.push(jrpc.response(request.id, value)))
+        .then((value) => this.push(jrpc.response(request.id, value)))
         .catch((e) => {
           let rethrow = false;
           let error: jrpc.ErrorObject;
           if (e instanceof RPCError) {
             error = e.toErrorObject();
           } else {
-            error = new RPCError('Internal error while processing request')
-              .toErrorObject();
+            error = new RPCError(
+              'Internal error while processing request',
+            ).toErrorObject();
             rethrow = true;
           }
           error.id = request.id;
@@ -415,7 +444,10 @@ export class Peer extends stream.Duplex {
   handleNotification(notification: jrpc.Notification) {
     if (this.onNotification) {
       this.onNotification.call(
-        undefined, notification.method, notification.params);
+        undefined,
+        notification.method,
+        notification.params,
+      );
     }
   }
 

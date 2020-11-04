@@ -13,16 +13,22 @@ describe('parse', () => {
       ['with a numeric id', { id: -7, method: 'foo.doBar/baz' }],
       ['with a string id', { id: 'three', method: 'hello' }],
       ['with params as empty array', { id: 55, method: 'foo', params: [] }],
-      ['with params by-position', {
-        id: 42,
-        method: 'bar',
-        params: [3, 'three', { three: 3 }, ['four', 'five']],
-      }],
-      ['with params by-name', {
-        id: 8,
-        method: 'baz',
-        params: { foo: 'bar', quux: 'yes', 3: 5 } as object,
-      }],
+      [
+        'with params by-position',
+        {
+          id: 42,
+          method: 'bar',
+          params: [3, 'three', { three: 3 }, ['four', 'five']],
+        },
+      ],
+      [
+        'with params by-name',
+        {
+          id: 8,
+          method: 'baz',
+          params: { foo: 'bar', quux: 'yes', 3: 5 } as object,
+        },
+      ],
     ])('%s', (_, vector) => {
       const { id, method, params } = vector;
       // We can't reassemble the message from the spread object as any
@@ -31,8 +37,12 @@ describe('parse', () => {
       // undefined. This would invalidate the tests as a property
       // that exists with the value undefined cannot be represented in
       // JSON.
-      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' }))
-        .toEqual({ id, method, params, kind: 'request' });
+      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' })).toEqual({
+        id,
+        method,
+        params,
+        kind: 'request',
+      });
     });
   });
 
@@ -40,27 +50,32 @@ describe('parse', () => {
     it.each<[string, Partial<jrpc.NotificationJSON>]>([
       ['with no params', { method: 'notifoo' }],
       ['with params as empty array', { method: 'blah', params: [] }],
-      ['with params by-position', {
-        method: 'a.method',
-        params: [
-          ['hello', 'bonjour', -7.2],
-          'abc',
-          { a: 3, b: 'four' },
-        ],
-      }],
-      ['with params by-name', {
-        method: 'yo',
-        params: {
-          a: 1,
-          b: 'two',
-          c: [3, 'four', 5],
-          d: { e: 'f' },
+      [
+        'with params by-position',
+        {
+          method: 'a.method',
+          params: [['hello', 'bonjour', -7.2], 'abc', { a: 3, b: 'four' }],
         },
-      }],
+      ],
+      [
+        'with params by-name',
+        {
+          method: 'yo',
+          params: {
+            a: 1,
+            b: 'two',
+            c: [3, 'four', 5],
+            d: { e: 'f' },
+          },
+        },
+      ],
     ])('%s', (_, vector) => {
       const { method, params } = vector;
-      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' }))
-        .toEqual({ method, params, kind: 'notification' });
+      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' })).toEqual({
+        method,
+        params,
+        kind: 'notification',
+      });
     });
   });
 
@@ -71,60 +86,96 @@ describe('parse', () => {
       ['with numeric result', { id: 5, result: 3.7 }],
       ['with string result', { id: 48, result: 'hello' }],
       ['with boolean result', { id: 1, result: true }],
-      ['with array result', {
-        id: 86,
-        result: ['one', 2, { three: 3 }, [4]],
-      }],
+      [
+        'with array result',
+        {
+          id: 86,
+          result: ['one', 2, { three: 3 }, [4]],
+        },
+      ],
       ['with object result', { id: 104, result: { yes: 'yup' } }],
     ])('%s', (_, vector) => {
       const { id, result } = vector;
-      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' }))
-        .toEqual({ id, result, kind: 'response' });
+      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' })).toEqual({
+        id,
+        result,
+        kind: 'response',
+      });
     });
   });
 
   describe('a valid Error', () => {
     it.each<[string, Partial<jrpc.ErrorJSON>]>([
-      ['with no id or data', {
-        id: null,
-        error: { code: -37000, message: 'you dun goofed' },
-      }],
-      ['with numeric id, no data', {
-        id: 7,
-        error: { code: 42, message: 'everything' },
-      }],
-      ['with string id, no data', {
-        id: 'asdf',
-        error: { code: 0, message: 'zero' },
-      }],
-      ['with boolean data', {
-        id: 2,
-        error: { code: 33, message: 'm', data: false },
-      }],
-      ['with numeric data', {
-        id: 3,
-        error: { code: 34, message: 'm', data: 8 },
-      }],
-      ['with string data', {
-        id: 4,
-        error: { code: 35, message: 'q', data: 'nope' },
-      }],
-      ['with null data', {
-        id: 88,
-        error: { code: 123, message: 'yes', data: null },
-      }],
-      ['with array data', {
-        id: 5,
-        error: { code: 36, message: 'r', data: [1, 2, 'three'] },
-      }],
-      ['with object data', {
-        id: 6,
-        error: { code: 37, message: 's', data: { foo: 'bar' } },
-      }],
+      [
+        'with no id or data',
+        {
+          id: null,
+          error: { code: -37000, message: 'you dun goofed' },
+        },
+      ],
+      [
+        'with numeric id, no data',
+        {
+          id: 7,
+          error: { code: 42, message: 'everything' },
+        },
+      ],
+      [
+        'with string id, no data',
+        {
+          id: 'asdf',
+          error: { code: 0, message: 'zero' },
+        },
+      ],
+      [
+        'with boolean data',
+        {
+          id: 2,
+          error: { code: 33, message: 'm', data: false },
+        },
+      ],
+      [
+        'with numeric data',
+        {
+          id: 3,
+          error: { code: 34, message: 'm', data: 8 },
+        },
+      ],
+      [
+        'with string data',
+        {
+          id: 4,
+          error: { code: 35, message: 'q', data: 'nope' },
+        },
+      ],
+      [
+        'with null data',
+        {
+          id: 88,
+          error: { code: 123, message: 'yes', data: null },
+        },
+      ],
+      [
+        'with array data',
+        {
+          id: 5,
+          error: { code: 36, message: 'r', data: [1, 2, 'three'] },
+        },
+      ],
+      [
+        'with object data',
+        {
+          id: 6,
+          error: { code: 37, message: 's', data: { foo: 'bar' } },
+        },
+      ],
     ])('%s', (_, vector) => {
       const { id, error } = vector;
-      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' }))
-        .toEqual({ id, error, kind: 'error' });
+      expect(jrpc.parse({ ...vector, jsonrpc: '2.0' })).toEqual({
+        id,
+        error,
+        kind: 'error',
+      });
     });
   });
 
@@ -286,54 +337,58 @@ describe('parse', () => {
 
 describe('request serializer', () => {
   it('serializes a request with a numeric id', () =>
-        expect(jrpc.request(-7, 'foo')).toMatchSnapshot());
+    expect(jrpc.request(-7, 'foo')).toMatchSnapshot());
   it('serializes a request with a string id', () =>
-        expect(jrpc.request('foo', 'method')).toMatchSnapshot());
+    expect(jrpc.request('foo', 'method')).toMatchSnapshot());
   it('serializes a request with an array of params', () =>
-        expect(jrpc.request(-803, 'mmm', [3, 'seven'])).toMatchSnapshot());
+    expect(jrpc.request(-803, 'mmm', [3, 'seven'])).toMatchSnapshot());
   it('does not allow fractional IDs', () =>
-        expect(() => jrpc.request(5.1, 'woop')).toThrow(TypeError));
+    expect(() => jrpc.request(5.1, 'woop')).toThrow(TypeError));
 });
 
 describe('notification serializer', () => {
   it('serializes a notification with no params', () =>
-        expect(jrpc.notification('aNotification')).toMatchSnapshot());
+    expect(jrpc.notification('aNotification')).toMatchSnapshot());
   it('serializes a notification with an array of params', () =>
-        expect(jrpc.notification('asdffdsa', ['one', 2, 'three'])).toMatchSnapshot());
+    expect(
+      jrpc.notification('asdffdsa', ['one', 2, 'three']),
+    ).toMatchSnapshot());
 });
 
 describe('response serializer', () => {
   it('serializes a response with a numeric id', () =>
-        expect(jrpc.response(7654)).toMatchSnapshot());
+    expect(jrpc.response(7654)).toMatchSnapshot());
   it('serializes a response with a string id', () =>
-        expect(jrpc.response('ayedee', { result: { result: ['result'] } }))
-            .toMatchSnapshot());
+    expect(
+      jrpc.response('ayedee', { result: { result: ['result'] } }),
+    ).toMatchSnapshot());
   it('does not allow fractional IDs', () =>
-        expect(() => jrpc.response(1.1)).toThrow(TypeError));
+    expect(() => jrpc.response(1.1)).toThrow(TypeError));
 });
 
 describe('error serializer', () => {
   it('does not allow fractional IDs', () =>
-        expect(() => jrpc.error({ id: 3.14, code: 1, message: '' }))
-            .toThrow(TypeError));
+    expect(() => jrpc.error({ id: 3.14, code: 1, message: '' })).toThrow(
+      TypeError,
+    ));
   it('does not allow fractional codes', () =>
-        expect(() => jrpc.error({ id: 3, code: 1.2, message: '' }))
-            .toThrow(TypeError));
+    expect(() => jrpc.error({ id: 3, code: 1.2, message: '' })).toThrow(
+      TypeError,
+    ));
   it('serializes an error with a numeric id', () =>
-        expect(jrpc.error({ id: 5, code: 1, message: '' }))
-            .toMatchSnapshot());
+    expect(jrpc.error({ id: 5, code: 1, message: '' })).toMatchSnapshot());
   it('serializes an error with a null id', () =>
-        expect(jrpc.error({ id: null, code: 0, message: '' }))
-            .toMatchSnapshot());
+    expect(jrpc.error({ id: null, code: 0, message: '' })).toMatchSnapshot());
   it('converts an undefined id to null', () =>
-        expect(jrpc.error({ code: 1, message: '' }).id).toBeNull());
+    expect(jrpc.error({ code: 1, message: '' }).id).toBeNull());
   it('serializes error data', () => {
     const data = { foo: 'bar', baz: ['a', 'b', 'c'] };
-    expect(jrpc.error({ data, id: 3, code: 7, message: 'yarr' }))
-      .toMatchObject({
+    expect(jrpc.error({ data, id: 3, code: 7, message: 'yarr' })).toMatchObject(
+      {
         jsonrpc: '2.0',
         id: 3,
         error: { data, code: 7, message: 'yarr' },
-      });
+      },
+    );
   });
 });

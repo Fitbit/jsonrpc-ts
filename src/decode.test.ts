@@ -9,14 +9,11 @@ const DateFromString = new t.Type<Date, string>(
   'DateFromString',
   (m): m is Date => m instanceof Date,
   (m, c) =>
-    either.chain(
-      t.string.validate(m, c),
-      (s) => {
-        const d = new Date(s);
-        return isNaN(d.getTime()) ? t.failure(s, c) : t.success(d);
-      },
-    ),
-  a => a.toISOString(),
+    either.chain(t.string.validate(m, c), (s) => {
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? t.failure(s, c) : t.success(d);
+    }),
+  (a) => a.toISOString(),
 );
 
 // it returns a function of the right type

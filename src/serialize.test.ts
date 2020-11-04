@@ -30,7 +30,9 @@ describe('ParseJSON', () => {
   it('handles unexpected errors gracefullly', (done) => {
     parser.on('error', () => done());
     const buf = Buffer.from('');
-    buf.toString = () => { throw new Error('Unexpected error!'); };
+    buf.toString = () => {
+      throw new Error('Unexpected error!');
+    };
     parser.write(buf);
   });
 });
