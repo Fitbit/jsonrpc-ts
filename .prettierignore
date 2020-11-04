@@ -1,5 +1,6 @@
 /coverage/
-/packages/*/lib/
+/lib/
+/mod/
 __test__/
 __snapshots__/
 src/**/__test__
